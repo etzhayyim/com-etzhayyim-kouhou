@@ -79,7 +79,7 @@
 
 (defn- base58btc [^bytes data]
   (let [zeros (count (take-while zero? data))
-        sb (StringBuilder.) fifty8 (java.math.BigInteger-valueOf 58)]
+        sb (StringBuilder.) fifty8 (java.math.BigInteger/valueOf 58)]
     (loop [n (java.math.BigInteger. 1 data)]
       (when (pos? (.signum n))
         (.append sb (.charAt b58 (.intValue (.mod n fifty8))))

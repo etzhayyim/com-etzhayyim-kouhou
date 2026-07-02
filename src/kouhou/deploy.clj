@@ -1,0 +1,84 @@
+(ns kouhou.deploy
+  "Deploy entrypoint — wires a REAL Murakumo-fleet LLM (langchain.model
+  OpenAI-compatible against the local Ollama, gemma-4-E4B) into the kouhou
+  organizer and runs ONE source digest end-to-end.
+
+  Publication is MockPublisher by default: the autonomous-publish rail is live
+  (ADR-2606281500), but an actual aozora write needs (a) the actor's did
+  registered on the PDS, (b) a member CACAO leash (LEASH env — the off-switch),
+  and (c) a real Publisher wired via `kouhou.aozora`. That flip is the owner's.
+  This entrypoint proves real-LLM → PublicInfoGovernor → (mock) publish against
+  the live Murakumo model.
+
+  Usage: clojure -M:dev -m kouhou.deploy \"<title>\" \"<url>\" \"<raw text>\"
+  Env:   KOUHOU_OLLAMA_URL (default http://127.0.0.1:11434)
+         KOUHOU_OLLAMA_MODEL (default gemma-4-E4B qat)"
+  (:require [clojure.data.json :as json]
+            [clojure.string :as str]
+            [langchain.model :as model]
+            [langgraph.graph :as g]
+            [kouhou.advisor :as advisor]
+            [kouhou.publisher :as publisher]
+            [kouhou.store :as store]
+            [kouhou.operation :as op])
+  (:import [java.net URI]
+           [java.net.http HttpClient HttpRequest HttpRequest$BodyPublishers
+            HttpResponse$BodyHandlers])
+  (:gen-class))
+
+(def ^:private default-ollama-url
+  (or (System/getenv "KOUHOU_OLLAMA_URL") "http://127.0.0.1:11434"))
+
+(def ^:private default-ollama-model
+  (or (System/getenv "KOUHOU_OLLAMA_MODEL")
+      "hf.co/unsloth/gemma-4-E4B-it-qat-GGUF:UD-Q4_K_XL"))
+
+(defn jvm-http-fn
+  "langchain.model :http-fn backed by the JDK HTTP client (no dependency)."
+  [{:keys [url method headers body]}]
+  (let [b (HttpRequest/newBuilder (URI/create url))]
+    (doseq [[k v] headers] (.header b k v))
+    (let [req  (-> b (.method (str/upper-case (name (or method :post)))
+                             (if body
+                               (HttpRequest$BodyPublishers/ofString body)
+                               (HttpRequest$BodyPublishers/noBody)))
+                   (.build))
+          resp (.send (HttpClient/newHttpClient) req (HttpResponse$BodyHandlers/ofString))]
+      {:status (.statusCode resp) :body (.body resp)})))
+
+(defn ollama-chat-model
+  "Build a langchain.model/openai-model against a Murakumo-fleet Ollama."
+  ([]
+   (ollama-chat-model default-ollama-url default-ollama-model))
+  ([ollama-url ollama-model]
+   (advisor/assert-murakumo! ollama-url)
+   (model/openai-model
+    {:url        (str ollama-url "/v1/chat/completions")
+     :model      ollama-model
+     :api-key    nil
+     :http-fn    jvm-http-fn
+     :json-write json/write-str
+     :json-read  #(json/read-str % :key-fn keyword)})))
+
+(defn -main
+  [& args]
+  (let [[title url raw] (if (seq args) args
+                            ["令和8年度 衛生対策基本方針（例）"
+                             "https://press.example.go.jp/2026/0702"
+                             "政府は本日、令和8年度の衛生対策基本方針を公表した。主な柱は予防接種の普及、保健所機能の強化、感染症サーベイランスの拡充である。"])
+        chat    (ollama-chat-model)
+        adv     (advisor/llm-advisor chat {:max-tokens 512})
+        s       (store/seed-db)
+        pub     (publisher/mock-publisher)
+        actor   (op/build s {:advisor adv :publisher pub})
+        sid     "deploy-1"
+        req     {:op :source/digest :source-id sid :url url
+                 :title title :raw raw}
+        r       (g/run* actor {:request req :context {:actor-id "kouhou" :phase 1}}
+                        {:thread-id sid})]
+    (println "=== kouhou deploy (real LLM @ Murakumo) ===")
+    (println "source     :" url)
+    (println "disposition:" (get-in r [:state :disposition]))
+    (println "briefing   :" (pr-str (get (store/briefing s sid) :summary)))
+    (println "published? :" (boolean (get-in r [:state :published])) "(mock publisher)")
+    (println "ledger tail:" (pr-str (last (store/ledger s))))))

@@ -1,0 +1,30 @@
+[
+  {
+    "source-id": "gov-jp-press",
+    "name": "政府広報オンライン（例）",
+    "host": "press.example.go.jp",
+    "kind": "government-pr",
+    "domain": "general",
+    "url": "https://press.example.go.jp/feed.json",
+    "read-only": true,
+    "comment": "R0 占位 — deploy 時に実在する公的機関の公式広報フィードに差し替え。registry は PublicInfoGovernor のホワイトリスト SSoT。"
+  },
+  {
+    "source-id": "kanpou",
+    "name": "官報（例）",
+    "host": "kanpou.example.go.jp",
+    "kind": "official-gazette",
+    "domain": "general",
+    "url": "https://kanpou.example.go.jp/feed.json",
+    "read-only": true
+  },
+  {
+    "source-id": "koueki-hojin",
+    "name": "公益法人協会（例）",
+    "host": "koueki.example.or.jp",
+    "kind": "public-interest-corp",
+    "domain": "general",
+    "url": "https://koueki.example.or.jp/feed.json",
+    "read-only": true
+  }
+]

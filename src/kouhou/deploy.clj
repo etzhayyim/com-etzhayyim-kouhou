@@ -94,7 +94,10 @@
                              "https://press.example.go.jp/2026/0702"
                              "政府は本日、令和8年度の衛生対策基本方針を公表した。主な柱は予防接種の普及、保健所機能の強化、感染症サーベイランスの拡充である。"])
         chat    (ollama-chat-model)
-        adv     (advisor/llm-advisor chat {:max-tokens 512})
+        ;; 512 is too tight for a "thinking" model (gemma4:e4b-it-qat emits a
+        ;; separate :reasoning field before :content and can burn the whole
+        ;; budget there) -- verified live 2026-07-13 against yosoku.deploy.
+        adv     (advisor/llm-advisor chat {:max-tokens 1024})
         s       (store/seed-db)
         pub     (publisher/mock-publisher)
         actor   (op/build s {:advisor adv :publisher pub})

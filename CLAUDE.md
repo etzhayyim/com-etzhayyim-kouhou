@@ -29,3 +29,18 @@ revocable member CACAO leash. Low-confidence briefings still publish, tagged
 - The actor's own Ed25519 identity lives in `.kouhou/identity.edn` (gitignored)
   — NEVER commit a private key.
 - `clojure -M:lint` (clj-kondo, errors fail) / `clojure -M:dev:test`.
+
+## Source registry (2026-07-19, ADR-2607197800)
+
+`registry/sources.seed.json` was generalized from a Japan-only fictional
+`*.example.*` placeholder set to a small, spot-verified **world-scope** set
+(JP ×2, US, GB, DE, FR, EU, UN). 7 of 8 entries were confirmed live via a
+direct HTTP fetch on 2026-07-19 (real RSS/Atom/RDF content, not HTML); the
+8th (`kanpou`/官報) is honestly marked `"verified": false` — the site is real
+but no feed was found. This is still R0, still a small best-effort set, NOT
+exhaustive world coverage — see the "Source registry" section of `README.md`
+for the full honesty accounting. Do not silently mark a new entry `verified`
+without an actual fetch. **This change did NOT touch `src/kouhou/governor.cljc`
+or `src/kouhou/ingest.cljc`** — `kouhou.governor/default-registry` (what the
+running governor and test suite actually check against at R0) still has the
+OLD fictional hosts; syncing it to this file is a separate, not-yet-done step.

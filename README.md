@@ -11,9 +11,12 @@ app-aozora** (collection `com.etzhayyim.apps.kouhou.publicBriefing`).
 `orgs/etzhayyim/root/80-data/kotoba-rad/kouhou.identity.journal.edn`).
 **Namespace**: `com.etzhayyim.apps.kouhou.*`.
 **ADR**: ADR-2607022210 (superproject, R0 scaffold) + `docs/adr/0001-architecture.md` (正本).
-**Status**: R0 scaffold — `mock-advisor` + `mock-publisher` + illustrative
-registry; real LLM summarizer (`langchain.model` on Murakumo) + real registry
-fetch + real aozora Publisher wired at deploy.
+**Status**: R0 scaffold — `mock-advisor` + `mock-publisher`; source registry
+(`registry/sources.seed.json`) expanded 2026-07-19 from a Japan-only fictional
+placeholder set to a small, spot-verified **world-scope** set (see "Source
+registry" below — this is still R0, still not what the running governor
+actually enforces yet); real LLM summarizer (`langchain.model` on Murakumo) +
+real registry fetch + real aozora Publisher wired at deploy.
 **First-touch channel**: app-aozora (`com.atproto.repo.createRecord`).
 **Cross-actor**: distinct from **kawaraban** (general news mirror, no curation/
 posting), **kataribe** (religious press), **danjo** (gov-data discrepancy
@@ -65,10 +68,49 @@ are the only thing that withholds publication.
 
 ## Source registry
 
-The canonical whitelist is `registry/sources.seed.json` (`source-id` / `host` /
-`kind` / `url` / `read-only`). R0 ships an illustrative set; deploy replaces
-these with real official feeds. `kouhou.governor/default-registry` mirrors the
-host set for offline tests; `kouhou.ingest/registered-source?` is the host check.
+The canonical whitelist is `registry/sources.seed.json` (`source-id` / `name` /
+`host` / `kind` / `domain` / `country` / `url` / `read-only` / `verified` /
+`comment`).
+
+**2026-07-19 (ADR-2607197800): generalized from Japan-only to world-scope.**
+The original 3 entries were all fictional `*.example.*` placeholders (not
+real hosts). They have been replaced with 8 entries spanning Japan (2),
+the United States, the United Kingdom, Germany, France, the European
+Commission, and the United Nations — each spot-checked with a direct live
+HTTP fetch on 2026-07-19 and marked `"verified": true/false` honestly:
+
+- `verified: true` (7 of 8) — a direct fetch on 2026-07-19 returned HTTP 200
+  with real RSS/Atom/RDF feed content (not an HTML placeholder or error page).
+  See each entry's `comment` for what was observed.
+- `verified: false` (1 of 8, `kanpou` / 官報) — the official gazette site
+  itself is real and live, but no machine-readable feed could be found at any
+  of the common paths tried; it needs either a confirmed feed URL or a
+  different ingest mechanism before it can be treated as live.
+
+This is a **small, best-effort, spot-verified set — not a claim of exhaustive
+world coverage.** Most of the world's governments and public bodies are not
+yet represented here (that broader "collect everything" job belongs to
+kawaraban's outlet allowlist and, longer-term, mikurabe per ADR-2607197800);
+this registry only needed to stop being Japan-only fiction. Gaps should be
+filled incrementally and honestly flagged (`"verified": false` + a comment
+explaining what's unconfirmed), never silently guessed. The old
+`koueki-hojin` (公益法人協会) fictional entry/category was dropped rather than
+re-guessed with a fake host — a real 公益法人-adjacent source can be added
+later following the same honesty discipline.
+
+**Important limitation — this file is not yet what the running governor
+enforces.** `kouhou.governor/default-registry` (in `src/kouhou/governor.cljc`,
+the host set `PublicInfoGovernor/check` actually uses at R0, and what the test
+suite exercises) still contains only the OLD fictional `.example.` hosts. It
+was intentionally left unchanged by this registry expansion (governor/ingest
+decision logic is out of scope for a registry-data-only change). Per
+`kouhou.ingest`'s own docstring, the real JVM loader that would read
+`registry/sources.seed.json` and feed it into the governor at deploy is not
+wired yet ("kept out of R0 so the core stays offline-testable"). So today,
+this file is documentation/staging data for that future wiring — the actual
+whitelist a live run checks against is still `default-registry`'s fictional
+set, until that loader lands. `kouhou.ingest/registered-source?` remains the
+host-check function.
 
 ## Phase rollout
 

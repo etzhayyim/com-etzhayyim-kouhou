@@ -31,6 +31,13 @@
 
 (defn- briefing-record [request context b]
   {:source-id  (:source-id request)
+   ;; deterministic per-source rkey (kouhou.aozora defaults to "self" when
+   ;; absent) — without this, publishing briefings for MULTIPLE sources in one
+   ;; live-ingest invocation would all createRecord at the same rkey "self" in
+   ;; the same collection and silently overwrite each other. One source ==
+   ;; one stable record slot; a later commit for the same source-id updates
+   ;; its own record rather than colliding with any other source's.
+   :rkey       (:source-id request)
    :actor      (:actor-id context)
    :title      (:title b)
    :summary    (:summary b)

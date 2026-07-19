@@ -11,12 +11,22 @@ app-aozora** (collection `com.etzhayyim.apps.kouhou.publicBriefing`).
 `orgs/etzhayyim/root/80-data/kotoba-rad/kouhou.identity.journal.edn`).
 **Namespace**: `com.etzhayyim.apps.kouhou.*`.
 **ADR**: ADR-2607022210 (superproject, R0 scaffold) + `docs/adr/0001-architecture.md` (正本).
-**Status**: R0 scaffold — `mock-advisor` + `mock-publisher`; source registry
-(`registry/sources.seed.json`) expanded 2026-07-19 from a Japan-only fictional
-placeholder set to a small, spot-verified **world-scope** set (see "Source
-registry" below — this is still R0, still not what the running governor
-actually enforces yet); real LLM summarizer (`langchain.model` on Murakumo) +
-real registry fetch + real aozora Publisher wired at deploy.
+**Status**: **R1** (2026-07-19) — real HTTP fetch (`src/kouhou/live_fetch.cljc`,
+RSS 2.0 / RSS 1.0 (RDF) / Atom 1.0) + a non-interactive live-ingest entrypoint
+(`src/kouhou/run_live_ingest.clj`, `clojure -M:live-ingest`) now exist,
+mirroring kawaraban's already-landed R0→R1 live-fetch (ADR-2607110200). Gated
+behind `KOUHOU_ALLOW_LIVE_INGEST` (default OFF — code-complete but off by
+default until an operator sets the env var). Uses the framework default
+`mock-advisor` for curation by default (deterministic faithful-excerpt
+summarizer) + the real `kouhou.aozora` Publisher; a real-LLM organizer
+(`langchain.model` on Murakumo) also already exists and is proven live
+(`kouhou.deploy`) but is a separate, not-engaged-by-default seam. Source
+registry (`registry/sources.seed.json`) expanded 2026-07-19 from a
+Japan-only fictional placeholder set to a small, spot-verified **world-scope**
+set (see "Source registry" below) — the live-ingest path loads this file at
+runtime as the real whitelist (via context `:registry`), not the offline
+`default-registry` fixture (see "Important limitation" below for what that
+fixture is still for).
 **First-touch channel**: app-aozora (`com.atproto.repo.createRecord`).
 **Cross-actor**: distinct from **kawaraban** (general news mirror, no curation/
 posting), **kataribe** (religious press), **danjo** (gov-data discrepancy
@@ -98,19 +108,21 @@ explaining what's unconfirmed), never silently guessed. The old
 re-guessed with a fake host — a real 公益法人-adjacent source can be added
 later following the same honesty discipline.
 
-**Important limitation — this file is not yet what the running governor
-enforces.** `kouhou.governor/default-registry` (in `src/kouhou/governor.cljc`,
-the host set `PublicInfoGovernor/check` actually uses at R0, and what the test
-suite exercises) still contains only the OLD fictional `.example.` hosts. It
-was intentionally left unchanged by this registry expansion (governor/ingest
-decision logic is out of scope for a registry-data-only change). Per
-`kouhou.ingest`'s own docstring, the real JVM loader that would read
-`registry/sources.seed.json` and feed it into the governor at deploy is not
-wired yet ("kept out of R0 so the core stays offline-testable"). So today,
-this file is documentation/staging data for that future wiring — the actual
-whitelist a live run checks against is still `default-registry`'s fictional
-set, until that loader lands. `kouhou.ingest/registered-source?` remains the
-host-check function.
+**Important limitation, updated 2026-07-19 (R0→R1 live-fetch): this file IS now
+what a live run enforces, but `kouhou.governor/default-registry` intentionally
+still is not.** `kouhou.governor/default-registry` (in `src/kouhou/governor.cljc`)
+still contains only the OLD fictional `.example.` hosts, and stays that way ON
+PURPOSE — it is the R0 offline-test fixture the existing test suite
+(`governor-contract-test` et al.) is written against, and changing it would be
+a silent breaking change to tests that have nothing to do with the real
+registry. The REAL runtime whitelist now comes from
+`kouhou.live-fetch/load-registry` (`registry/sources.seed.json`, real JVM file
+I/O + injected JSON reader) → `kouhou.live-fetch/registry->host-set`, passed
+into the actor graph via context `:registry` by
+`kouhou.run-live-ingest`/`run-source!` — the SAME `context :registry` override
+seam `kouhou.governor/check` already supported. `kouhou.ingest/registered-source?`
+(unchanged) remains the host-check function either way; only which host set
+gets passed to it differs between an offline test and a live run.
 
 ## Phase rollout
 
@@ -133,6 +145,11 @@ host-check function.
 clojure -M:lint          # clj-kondo, errors fail
 clojure -M:dev:test      # cognitect test-runner (canonical)
 clojure -M:dev:run       # offline demo (one registered + one unregistered source)
+
+# real fetch + real publish over every "verified": true registry/sources.seed.json
+# source — refuses (no network call) unless the gate is set. Founder/Council explicit
+# go-live instruction required to set this (ADR-2607110200 precedent).
+KOUHOU_ALLOW_LIVE_INGEST=1 clojure -M:live-ingest
 ```
 
 ## Related files
@@ -140,3 +157,4 @@ clojure -M:dev:run       # offline demo (one registered + one unregistered sourc
 - `docs/adr/0001-architecture.md` — design 正本.
 - `../../../90-docs/adr/2607022210-com-etzhayyim-kouhou-public-info-actor-r0.md` — superproject ADR.
 - `CLAUDE.md` — repo invariants / conventions.
+- `MATURITY.md` — R0→R1 status, what's verified vs not, honesty ladder.

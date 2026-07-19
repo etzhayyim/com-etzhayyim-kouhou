@@ -1,30 +1,98 @@
 [
   {
     "source-id": "gov-jp-press",
-    "name": "政府広報オンライン（例）",
-    "host": "press.example.go.jp",
+    "name": "政府広報オンライン (Government of Japan Public Relations Online)",
+    "host": "www.gov-online.go.jp",
     "kind": "government-pr",
     "domain": "general",
-    "url": "https://press.example.go.jp/feed.json",
+    "country": "JP",
+    "url": "https://www.gov-online.go.jp/rss/index.rdf",
     "read-only": true,
-    "comment": "R0 占位 — deploy 時に実在する公的機関の公式広報フィードに差し替え。registry は PublicInfoGovernor のホワイトリスト SSoT。"
+    "verified": true,
+    "comment": "World-scope registry (ADR-2607197800, 2026-07-19). Replaces the old R0 fictional press.example.go.jp placeholder. Verified live 2026-07-19 via direct HTTP fetch: 200 OK, content-type application/rdf+xml, real RSS 1.0/RDF channel (title 政府広報オンライン, dc:creator 内閣府大臣官房政府広報室), dc:date matching the fetch day."
   },
   {
     "source-id": "kanpou",
-    "name": "官報（例）",
-    "host": "kanpou.example.go.jp",
+    "name": "官報 (Official Gazette of Japan)",
+    "host": "www.kanpo.go.jp",
     "kind": "official-gazette",
     "domain": "general",
-    "url": "https://kanpou.example.go.jp/feed.json",
-    "read-only": true
+    "country": "JP",
+    "url": "https://www.kanpo.go.jp/",
+    "read-only": true,
+    "verified": false,
+    "comment": "World-scope registry (ADR-2607197800, 2026-07-19). Replaces the old R0 fictional kanpou.example.go.jp placeholder with the REAL official gazette site (opened 2025-04-01 by the Cabinet Office, superseding the old npb.go.jp portal) -- confirmed live (HTTP 200) but this is the homepage, NOT a feed. Checked 2026-07-19 for a machine-readable feed at /feed, /feed.xml, /rss, /rss.xml, /rss/index.rdf -- all 404, none found. Best-effort, UNVERIFIED feed -- needs confirmation of a real feed/API (or a page-scrape ingest path) before PublicInfoGovernor treats it as live."
   },
   {
-    "source-id": "koueki-hojin",
-    "name": "公益法人協会（例）",
-    "host": "koueki.example.or.jp",
-    "kind": "public-interest-corp",
+    "source-id": "gov-us-whitehouse",
+    "name": "The White House — News",
+    "host": "www.whitehouse.gov",
+    "kind": "government-pr",
     "domain": "general",
-    "url": "https://koueki.example.or.jp/feed.json",
-    "read-only": true
+    "country": "US",
+    "url": "https://www.whitehouse.gov/news/feed/",
+    "read-only": true,
+    "verified": true,
+    "comment": "World-scope registry (ADR-2607197800, 2026-07-19). Verified live 2026-07-19 via direct HTTP fetch: 200 OK, content-type application/rss+xml, real RSS 2.0 channel with current (July 2026) dated items."
+  },
+  {
+    "source-id": "gov-uk-announcements",
+    "name": "GOV.UK — News and communications",
+    "host": "www.gov.uk",
+    "kind": "government-pr",
+    "domain": "general",
+    "country": "GB",
+    "url": "https://www.gov.uk/search/news-and-communications.atom",
+    "read-only": true,
+    "verified": true,
+    "comment": "World-scope registry (ADR-2607197800, 2026-07-19). Verified live 2026-07-19 via direct HTTP fetch: 200 OK, content-type application/atom+xml, real Atom feed (title \"News and communications\", author HM Government) with current (July 2026) dated entries."
+  },
+  {
+    "source-id": "gov-de-bundesregierung",
+    "name": "Bundesregierung — Pressemitteilungen",
+    "host": "www.bundesregierung.de",
+    "kind": "government-pr",
+    "domain": "general",
+    "country": "DE",
+    "url": "https://www.bundesregierung.de/service/rss/breg-de/1151244/feed.xml",
+    "read-only": true,
+    "verified": true,
+    "comment": "World-scope registry (ADR-2607197800, 2026-07-19). Verified live 2026-07-19 via direct HTTP fetch: 200 OK, content-type application/rss+xml, real RSS 2.0 channel (\"Pressemitteilungen\", copyright Presse- und Informationsamt der Bundesregierung)."
+  },
+  {
+    "source-id": "gov-fr-elysee",
+    "name": "Élysée — Présidence de la République (actualités)",
+    "host": "www.elysee.fr",
+    "kind": "government-pr",
+    "domain": "general",
+    "country": "FR",
+    "url": "https://www.elysee.fr/feed",
+    "read-only": true,
+    "verified": true,
+    "comment": "World-scope registry (ADR-2607197800, 2026-07-19). Verified live 2026-07-19 via direct HTTP fetch: 200 OK, XML content, real RSS 2.0 feed with current (July 2026) dated items. gouvernement.fr itself has no confirmed single central RSS feed as of this check (only scattered per-ministry feeds), so the Présidence's own feed was used for France instead -- an honest substitution, not the exact suggested host."
+  },
+  {
+    "source-id": "eu-ec-presscorner",
+    "name": "European Commission — Press corner",
+    "host": "ec.europa.eu",
+    "kind": "international-org-pr",
+    "domain": "general",
+    "country": "EU",
+    "url": "https://ec.europa.eu/commission/presscorner/api/rss",
+    "read-only": true,
+    "verified": true,
+    "comment": "World-scope registry (ADR-2607197800, 2026-07-19). Verified live 2026-07-19 via direct HTTP fetch: 200 OK, content-type application/rss+xml, real RSS 2.0 channel (\"Press releases - RSS\", copyright European Commission DG COMM) with current (July 2026) dated items."
+  },
+  {
+    "source-id": "un-press",
+    "name": "United Nations — Meetings Coverage and Press Releases",
+    "host": "press.un.org",
+    "kind": "international-org-pr",
+    "domain": "general",
+    "country": "INT",
+    "url": "https://press.un.org/en/rss.xml",
+    "read-only": true,
+    "verified": true,
+    "comment": "World-scope registry (ADR-2607197800, 2026-07-19). Verified live 2026-07-19 via direct HTTP fetch: 200 OK, content-type application/rss+xml, real RSS 2.0 channel (\"UN Meetings Coverage and Press Releases\") with current (July 2026) dated items."
   }
 ]

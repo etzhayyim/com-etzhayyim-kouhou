@@ -1,0 +1,56 @@
+{
+  "lexicon" : 1,
+  "id" : "com.etzhayyim.apps.kouhou.publicBriefing",
+  "description" : "A governor-approved public-interest briefing published by kouhou to app-aozora. The source URL preserves publication provenance.",
+  "defs" : {
+    "main" : {
+      "type" : "record",
+      "key" : "any",
+      "record" : {
+        "type" : "object",
+        "required" : [ "sourceId", "actor", "title", "summary", "sourceUrl", "domain", "tags", "text", "createdAt" ],
+        "properties" : {
+          "tags" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "datetime",
+            "description" : "Publication timestamp assigned at the app-aozora boundary."
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "summary" : {
+            "type" : "string"
+          },
+          "sourceUrl" : {
+            "type" : "string",
+            "format" : "uri",
+            "description" : "Registered public-interest source URL required by PublicInfoGovernor provenance checks."
+          },
+          "domain" : {
+            "type" : "string",
+            "description" : "Advisor-provided public-interest topic domain."
+          },
+          "sourceId" : {
+            "type" : "string",
+            "description" : "Stable registry source identifier; also selects the deterministic repository record key."
+          },
+          "actor" : {
+            "type" : "string",
+            "format" : "did",
+            "description" : "Publishing kouhou identity; overwritten from the authenticated actor identity at the network boundary."
+          },
+          "text" : {
+            "type" : "string",
+            "description" : "Rendered social briefing body including title, summary, and source citation."
+          }
+        }
+      }
+    }
+  }
+}

@@ -26,10 +26,21 @@
 (def confidence-floor 0.4)
 
 (def default-registry
-  "Whitelisted public-sector / public-interest source HOSTS (R0 illustrative —
-  the canonical registry is registry/sources.seed.json, loaded by kouhou.ingest
-  at deploy). A briefing whose source host is NOT here is held
-  (:source-not-in-registry). Tests may override via context :registry."
+  "R0 OFFLINE-TEST FIXTURE ONLY — the old illustrative `*.example.*` hosts.
+  This is NOT the live whitelist and is intentionally left unsynced with
+  `registry/sources.seed.json` (ADR-2607197800 world-scope expansion, then
+  this change's live-fetch wiring): the offline test suite
+  (`governor-contract-test` et al.) is written against these fixture hosts on
+  purpose, so changing this set would be a silent breaking change to tests
+  that have nothing to do with the real registry.
+
+  The REAL runtime whitelist for a live run is
+  `(kouhou.live-fetch/registry->host-set (kouhou.live-fetch/load-registry
+  \"registry/sources.seed.json\" json/read-str))`, passed in via context
+  :registry — see `kouhou.run-live-ingest`. A briefing whose source host is
+  NOT in the registry in effect (default-registry when :registry is absent
+  from context, else whatever the caller passed) is held
+  (:source-not-in-registry)."
   #{"press.example.go.jp" "kanpou.example.go.jp" "koueki.example.or.jp"
     "example.go.jp" "example.gov"})
 
